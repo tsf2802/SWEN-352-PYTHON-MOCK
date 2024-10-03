@@ -183,7 +183,7 @@ class TestLibrary(unittest.TestCase):
         # Assert
         self.assertTrue(result)
         
-    def test_is_book_borrowed_true(self):
+    def test_is_book_borrowed_false(self):
         # Setup
         patron = Mock()
         book_title = "book"
