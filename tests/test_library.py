@@ -195,5 +195,3 @@ class TestLibrary(unittest.TestCase):
         # Assert
         self.assertFalse(result)
     
-if __name__ == "__main__":
-    unittest.main()
