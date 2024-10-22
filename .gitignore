@@ -1,3 +1,4 @@
 **/virtualenv/
 **/library/__pycache__/
 **/tests/__pycache__/
+/setup.cfg
