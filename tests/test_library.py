@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch, Mock
 from library.library import Library
+from library.patron import Patron
 
 """
 Filename: test_library.py
@@ -112,19 +113,22 @@ class TestLibrary(unittest.TestCase):
         # Assert
         self.assertEqual(len(result), 0)
 
-    def test_register_patron(self):
+    @patch.object(Patron, "__init__", return_value=None) # Mock the __init__ method of the Patron class
+    def test_register_patron(self, mock_patron):
         # Setup
         fname = "fname"
         lname = "lname"
         age = 10
         memberID = 1
-        self.mock_db.insert_patron.return_value = memberID
         
-        # Expected
-        result = self.library.register_patron(fname, lname, age, memberID)
+        # Register the patron
+        self.library.register_patron(fname, lname, age, memberID)
         
-        # Assert
-        self.assertEqual(result, memberID)
+        # Verify the Patron object was created with the correct arguments
+        mock_patron.assert_called_once_with(fname, lname, age, memberID)
+
+        # Verify that insert_patron method was called exactly once
+        self.mock_db.insert_patron.assert_called_once()
         
     def test_is_patron_registered_true(self):
         # Setup

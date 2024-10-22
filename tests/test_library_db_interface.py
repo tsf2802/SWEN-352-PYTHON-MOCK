@@ -14,7 +14,7 @@ class TestLibraryDbInterface(unittest.TestCase):
     def test_library_db_init(self, mock_tinydb):
         # Call the constructor
         library_db = Library_DB()
-        mock_tinydb.assert_called_with(Library_DB.DATABASE_FILE)
+        mock_tinydb.assert_called_with("db.json") # Ensure TinyDB was called with the correct file name
         self.assertEqual(library_db.db, mock_tinydb.return_value)
    
     @patch('library.library_db_interface.Library_DB.retrieve_patron')
@@ -42,6 +42,15 @@ class TestLibraryDbInterface(unittest.TestCase):
     def test_insert_patron_none(self):
         result = self.CuT.insert_patron(None)
         self.assertEqual(result, None)
+    
+    @patch.object(Library_DB, 'convert_patron_to_db_format', return_value=None)
+    def test_insert_patron_valid(self, mock_convert_patron):
+        patron = Patron("fname", "lname", 10, "1")
+        mock_convert_patron.return_value = {"fname": "fname", "lname": "fname", "age": 10, "memberID": "1"}
+        result = self.CuT.insert_patron(patron)
+        mock_convert_patron.assert_called_once_with(patron)
+        self.assertIsNotNone(result)
+        self.assertEqual(result, 1)
 
     @patch('library.library_db_interface.TinyDB')
     def test_get_patron_count_with_no_patrons(self, MockTinyDB):
