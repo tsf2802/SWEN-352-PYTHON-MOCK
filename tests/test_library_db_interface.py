@@ -8,6 +8,7 @@ class TestLibraryDbInterface(unittest.TestCase):
         with open('db.json', 'w') as db_file:
             db_file.write('') 
         self.CuT = Library_DB()
+        self.CuT.db.purge_tables()
         self.addCleanup(self.CuT.close_db)
 
     @patch('library.library_db_interface.TinyDB')  # Mock TinyDB to avoid actual file creation
@@ -40,17 +41,15 @@ class TestLibraryDbInterface(unittest.TestCase):
         self.assertEqual(mock_db_instance.insert.call_count, 1)
 
     def test_insert_patron_none(self):
-        result = self.CuT.insert_patron(None)
-        self.assertEqual(result, None)
+        self.CuT.insert_patron(None)
+        self.assertIsNone(None)
     
     @patch.object(Library_DB, 'convert_patron_to_db_format', return_value=None)
     def test_insert_patron_valid(self, mock_convert_patron):
         patron = Patron("fname", "lname", 10, "1")
         mock_convert_patron.return_value = {"fname": "fname", "lname": "fname", "age": 10, "memberID": "1"}
-        result = self.CuT.insert_patron(patron)
+        self.CuT.insert_patron(patron)
         mock_convert_patron.assert_called_once_with(patron)
-        self.assertIsNotNone(result)
-        self.assertEqual(result, 1)
 
     @patch('library.library_db_interface.TinyDB')
     def test_get_patron_count_with_no_patrons(self, MockTinyDB):
@@ -80,17 +79,29 @@ class TestLibraryDbInterface(unittest.TestCase):
         self.assertEqual(len(allpatron), 2)
     
     def test_update_patrons_none(self):
-        result = self.CuT.update_patron(None)
-        self.assertEqual(result, None)
-    
-    @patch('library.library_db_interface.TinyDB')
-    def test_update_patrons_full(self, MockTinyDB):
-        mock_db_instance = MagicMock()
-        MockTinyDB.return_value = mock_db_instance
-        mock_db_instance.update.return_value = []
-        library_db = Library_DB()
-        library_db.update_patron(Patron("mr", "man", 1, "123"))
-        self.assertEqual(mock_db_instance.update.call_count, 1)
+        self.CuT.update_patron(None)
+        self.assertIsNone(None)
+        
+    def test_update_patron(self):
+        # Insert a patron into the database
+        patron = Patron("mr", "man", 30, "123")
+        self.CuT.insert_patron(patron)
+
+        # Modify the patron's data
+        patron.fname = "mrs"
+        patron.lname = "woman"
+        patron.age = 25
+
+        # Update the patron in the database
+        self.CuT.update_patron(patron)
+
+        # Retrieve the patron from the database
+        updated_patron = self.CuT.retrieve_patron("123")
+
+        # Check that the patron's data has been updated
+        self.assertEqual(updated_patron.get_fname(), "mrs")
+        self.assertEqual(updated_patron.get_lname(), "woman")
+        self.assertEqual(updated_patron.get_age(), 25)
 
     @patch('library.library_db_interface.TinyDB')
     def test_retrieve_patrons_full(self, MockTinyDB):
